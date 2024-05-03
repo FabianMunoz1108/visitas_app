@@ -1,11 +1,11 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
 import 'package:visitas_app/models/persona_model.dart';
 import 'package:visitas_app/models/reunion_model.dart';
 import 'package:visitas_app/models/visitante_model.dart';
 import 'package:visitas_app/services/persona_service.dart';
 import 'package:visitas_app/services/reunion_service.dart';
 import 'package:visitas_app/services/visitante_service.dart';
+import 'package:visitas_app/utils/alert.dart';
 
 class AgregarReunion extends StatefulWidget {
   //Item especifico para edición
@@ -13,7 +13,7 @@ class AgregarReunion extends StatefulWidget {
   final Function(ReunionModel) onAgregarItem;
 
   const AgregarReunion(
-      {required this.onAgregarItem, required this.itemToUpdate});
+      {super.key, required this.onAgregarItem, required this.itemToUpdate});
 
   @override
   State<AgregarReunion> createState() => _AgregarReunionState();
@@ -21,7 +21,6 @@ class AgregarReunion extends StatefulWidget {
 
 class _AgregarReunionState extends State<AgregarReunion> {
   final _lugarController = TextEditingController(text: "");
-  final _duracionController = TextEditingController(text: "1");
   final _reuService = ReunionService();
   final _perService = PersonaService();
   final _visService = VisitanteService();
@@ -29,7 +28,11 @@ class _AgregarReunionState extends State<AgregarReunion> {
   late DateTime _fecha;
   late List<PersonaModel> _personas;
   late List<VisitanteModel> _visitantes;
+  int _reunionId = 0;
   bool _isLoading = true;
+  double _duracion = 0.0;
+  int _personaSeleccionada = 0;
+  int _visitanteSeleccionado = 0;
 
   @override
   void initState() {
@@ -38,10 +41,17 @@ class _AgregarReunionState extends State<AgregarReunion> {
     _obtenerCatalogos();
 
     if (widget.itemToUpdate != null) {
+      _reunionId = widget.itemToUpdate!.reuId;
+      _duracion = widget.itemToUpdate!.duracion.toDouble();
       _lugarController.text = widget.itemToUpdate!.lugar;
-    }
+      _personaSeleccionada = widget.itemToUpdate!.perId;
+      _visitanteSeleccionado = widget.itemToUpdate!.visId;
 
-    _fecha = DateTime.now();
+      //parsear la fecha
+      _fecha = DateTime.parse(widget.itemToUpdate!.horario);
+    } else {
+      _fecha = DateTime.now();
+    }
     _personas = [];
     _visitantes = [];
   }
@@ -62,6 +72,33 @@ class _AgregarReunionState extends State<AgregarReunion> {
     }
   }
 
+  //Guarda o actualiza una reunión
+  Future<int> _saveReunion(ReunionModel model) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      var id = 0;
+      if (model.reuId > 0) {
+        id = await _reuService.putReunion(model);
+      } else {
+        id = await _reuService.postReunion(model);
+      }
+      return id;
+    } catch (e) {
+      showAlertDialog(context,
+          title: 'Error', content: 'Ocurrió un error al guardar la reunión');
+
+      print('Error al guardar la reunión: $e  ');
+      return 0;
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
@@ -69,36 +106,44 @@ class _AgregarReunionState extends State<AgregarReunion> {
         middle: Text(widget.itemToUpdate == null
             ? 'Agregar Reunión'
             : 'Actualizar Reunión'),
-        trailing: CupertinoButton(
+        trailing:
+            //Inicio boton de guardar
+            CupertinoButton(
           padding: EdgeInsets.zero,
-          onPressed: () {
-            //Se verifica si el item ya existe para no remplazarlo con uno nuevo
-            if (widget.itemToUpdate == null) {
-              print("Nuevo item");
+          onPressed: () async {
+            // Elemento a guardar o actualizar
+            var r = ReunionModel(
+              reuId: _reunionId,
+              lugar: _lugarController.text,
+              duracion: _duracion.toInt(),
+              horario: _fecha.toIso8601String(),
+              perId: _personaSeleccionada,
+              visId: _visitanteSeleccionado,
+            );
+            var id = await _saveReunion(r);
 
-              widget.onAgregarItem(
-                ReunionModel(
-                  reuId: 0,
-                  lugar: _lugarController.text,
-                  horario: _fecha.toIso8601String(),
-                  duracion: int.parse(_duracionController.text),
-                  perId: 2,
-                  visId: 1,
-                ),
-              );
-            } else {
-              print("Actualizar sin duplicar");
+            if (id > 0) {
+              //Se verifica si el item ya existe para no remplazarlo con uno nuevo
+              if (widget.itemToUpdate == null) {
+                widget.onAgregarItem(r);
+              } else {
+                // Actualiza el item en la lista sin remplazarlo
+                widget.itemToUpdate!.reuId = _reunionId;
+                widget.itemToUpdate!.lugar = _lugarController.text;
+                widget.itemToUpdate!.duracion = _duracion.toInt();
+                widget.itemToUpdate!.horario = _fecha.toIso8601String();
+                widget.itemToUpdate!.perId = _personaSeleccionada;
+                widget.itemToUpdate!.visId = _visitanteSeleccionado;
 
-              // Update existing item
-              widget.itemToUpdate!.lugar = _lugarController.text;
-
-              widget.onAgregarItem(widget.itemToUpdate!);
+                widget.onAgregarItem(widget.itemToUpdate!);
+              }
             }
           },
           child: Icon(widget.itemToUpdate == null
               ? CupertinoIcons.add_circled
               : CupertinoIcons.check_mark_circled),
         ),
+        //Fin boton de guardar
       ),
       child: SafeArea(
         child: SingleChildScrollView(
@@ -106,54 +151,110 @@ class _AgregarReunionState extends State<AgregarReunion> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
+              //Inicio lugar de la reunión
               const Text('Lugar:'),
               CupertinoTextField(
                 controller: _lugarController,
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 8),
+              //Fin lugar de la reunión
+
+              //Inicio duración de la reunión
+              Text('Duración: ${_duracion.toStringAsFixed(0)} hr(s)'),
+              Row(children: [
+                Expanded(
+                  child: CupertinoSlider(
+                    min: 0,
+                    max: 8,
+                    divisions: 10,
+                    value: _duracion,
+                    onChanged: (value) {
+                      setState(() {
+                        _duracion = value;
+                      });
+                    },
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 8),
+              //Fin duración de la reunión
+
+              //Inicio fecha de la reunión
               const Text('Fecha:'),
-              const SizedBox(height: 8),
-              const Text('Duración en horas:'),
-              CupertinoTextField(
-                controller: _duracionController,
-                keyboardType: TextInputType.number,
-                inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.digitsOnly
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text('Visitante:'),
-              FutureBuilder<List<VisitanteModel>>(
-                future: Future.value(_visitantes),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const CupertinoActivityIndicator();
-                  } else {
-                    return CupertinoPicker(
-                      itemExtent: 32,
-                      onSelectedItemChanged: (index) {
-                        print(
-                            'Visitante seleccionado: ${_visitantes[index].nombre}');
+              CupertinoButton(
+                onPressed: () {
+                  showDateDialog(
+                    context,
+                    CupertinoDatePicker(
+                      initialDateTime: _fecha,
+                      mode: CupertinoDatePickerMode.date,
+                      use24hFormat: true,
+                      onDateTimeChanged: (DateTime newDateTime) {
+                        setState(() {
+                          _fecha = newDateTime;
+                        });
                       },
-                      children:
-                          snapshot.data!.map((e) => Text(e.nombre)).toList(),
-                    );
-                  }
+                    ),
+                  );
                 },
+                child: Text(
+                    //formatear la fecha
+                    '${_fecha.day}/${_fecha.month}/${_fecha.year}'),
               ),
               const SizedBox(height: 8),
+              //Fin fecha de la reunión
+
+              //Inicio visitante
+              const Text('Visitante:'),
+              if (_isLoading)
+                const CupertinoActivityIndicator()
+              else
+                CupertinoPicker(
+                  itemExtent: 32,
+                  // Selecciona el visitante que se está actualizando
+                  scrollController: FixedExtentScrollController(
+                    initialItem: widget.itemToUpdate != null
+                        ? _visitantes.indexWhere((visitante) =>
+                            visitante.visId == _visitanteSeleccionado)
+                        : 0,
+                  ),
+                  onSelectedItemChanged: (index) {
+                    setState(() {
+                      _visitanteSeleccionado = _visitantes[index].visId;
+                      print(
+                          'Visitante seleccionado: ${_visitantes[index].nombre}');
+                    });
+                  },
+                  children: _visitantes.map((e) => Text(e.nombre)).toList(),
+                ),
+              const SizedBox(height: 8),
+              //Fin visitante
+
+              //Inicio persona a quién visita
               const Text('Persona a quién visita:'),
               if (_isLoading)
                 const CupertinoActivityIndicator()
               else
                 CupertinoPicker(
                   itemExtent: 32,
+                  // Selecciona la persona que se está actualizando
+                  scrollController: FixedExtentScrollController(
+                    initialItem: widget.itemToUpdate != null
+                        ? _personas.indexWhere(
+                            (persona) => persona.perId == _personaSeleccionada)
+                        : 0,
+                  ),
                   onSelectedItemChanged: (index) {
-                    print('Persona seleccionada: ${_personas[index].nombre}');
+                    setState(() {
+                      _personaSeleccionada = _personas[index].perId;
+                      print('Persona seleccionada: ${_personas[index].nombre}');
+                    });
                   },
                   children: _personas.map((e) => Text(e.nombre)).toList(),
                 ),
+              const SizedBox(height: 8),
+              //Fin persona a quién visita
             ],
           ),
         ),

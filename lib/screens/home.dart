@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 class Home extends StatelessWidget {
-  const Home({super.key});
+  const Home({Key? key});
 
   @override
   Widget build(BuildContext context) {
@@ -10,15 +10,20 @@ class Home extends StatelessWidget {
         middle: Text('Bienvenido al sistema de visitas'),
       ),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(children: [
-              Row(
-                children: [
-                  Expanded(child: Image.asset('assets/Congreso-GTO.png')),
-                ],
-              ),
-          ]),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: Image.asset('assets/Congreso-GTO.png')),
+                  ],
+                ),
+                // Add more widgets here as needed
+              ],
+            ),
+          ),
         ),
       ),
     );

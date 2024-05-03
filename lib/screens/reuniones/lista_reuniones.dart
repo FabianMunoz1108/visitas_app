@@ -114,7 +114,7 @@ class _ListaReunionState extends State<ListaReunion> {
 
                           return CupertinoListTile(
                               title: Text(reunion.lugar),
-                              subtitle: Text('Fecha: $fechaFormateada'),
+                              subtitle: Text('Fecha: $fechaFormateada, Duración: ${reunion.duracion} hr(s)'),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [

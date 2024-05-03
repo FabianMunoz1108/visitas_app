@@ -18,6 +18,7 @@ class AgregarVisitante extends StatefulWidget {
 class _AgregarVisitanteState extends State<AgregarVisitante> {
   int _visitanteId = 0;
   bool _isLoading = false;
+  final _service = VisitanteService();
   final _nombreController = TextEditingController(text: "");
   final _origenController = TextEditingController(text: "");
 
@@ -35,7 +36,6 @@ class _AgregarVisitanteState extends State<AgregarVisitante> {
 
   //Guarda o actualiza un visitante
   Future<int> _saveVisitante(VisitanteModel model) async {
-    var service = VisitanteService();
     setState(() {
       _isLoading = true;
     });
@@ -43,9 +43,9 @@ class _AgregarVisitanteState extends State<AgregarVisitante> {
     try {
       var id = 0;
       if (model.visId > 0) {
-        id = await service.putVisitante(model);
+        id = await _service.putVisitante(model);
       } else {
-        id = await service.postVisitante(model);
+        id = await _service.postVisitante(model);
       }
       return id;
     } catch (e) {

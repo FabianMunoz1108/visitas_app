@@ -18,8 +18,9 @@ class AgregarPersona extends StatefulWidget {
 class _AgregarPersonaState extends State<AgregarPersona> {
   int _personaId = 0;
   bool _isLoading = false;
-  final _nombreController = TextEditingController(text: "");
+  final _service = PersonaService();
   final _areaController = TextEditingController(text: "");
+  final _nombreController = TextEditingController(text: "");
 
   @override
   void initState() {
@@ -35,7 +36,6 @@ class _AgregarPersonaState extends State<AgregarPersona> {
 
   //Guarda o actualiza una persona
   Future<int> _savePersona(PersonaModel model) async {
-    var service = PersonaService();
     setState(() {
       _isLoading = true;
     });
@@ -43,9 +43,9 @@ class _AgregarPersonaState extends State<AgregarPersona> {
     try {
       var id = 0;
       if (model.perId > 0) {
-        id = await service.putPersona(model);
+        id = await _service.putPersona(model);
       } else {
-        id = await service.postPersona(model);
+        id = await _service.postPersona(model);
       }
       return id;
     } catch (e) {
@@ -68,10 +68,12 @@ class _AgregarPersonaState extends State<AgregarPersona> {
         middle: Text(widget.itemToUpdate == null
             ? 'Agregar Persona'
             : 'Actualizar Persona'),
-        trailing: CupertinoButton(
+        trailing:
+          //Inicio boton de guardar
+          CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: () async {
-            // Item to add or update
+            // Elemento a guardar o actualizar
             var p = PersonaModel(
               perId: _personaId,
               nombre: _nombreController.text,
@@ -84,7 +86,7 @@ class _AgregarPersonaState extends State<AgregarPersona> {
               if (widget.itemToUpdate == null) {
                 widget.onAgregarItem(p);
               } else {
-                // Update existing item
+                // Actualiza el item en la lista sin remplazarlo
                 widget.itemToUpdate!.perId = _personaId;
                 widget.itemToUpdate!.nombre = _nombreController.text;
                 widget.itemToUpdate!.area = _areaController.text;
@@ -97,6 +99,7 @@ class _AgregarPersonaState extends State<AgregarPersona> {
               ? CupertinoIcons.add_circled
               : CupertinoIcons.check_mark_circled),
         ),
+        //Fin boton de guardar
       ),
       child: SafeArea(
         child: SingleChildScrollView(
