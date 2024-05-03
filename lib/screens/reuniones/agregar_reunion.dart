@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:visitas_app/models/persona_model.dart';
 import 'package:visitas_app/models/reunion_model.dart';
 import 'package:visitas_app/models/visitante_model.dart';
-import 'package:visitas_app/services/visitas_service.dart';
+import 'package:visitas_app/services/persona_service.dart';
+import 'package:visitas_app/services/reunion_service.dart';
+import 'package:visitas_app/services/visitante_service.dart';
 
 class AgregarReunion extends StatefulWidget {
   //Item especifico para edición
@@ -20,7 +22,10 @@ class AgregarReunion extends StatefulWidget {
 class _AgregarReunionState extends State<AgregarReunion> {
   final _lugarController = TextEditingController(text: "");
   final _duracionController = TextEditingController(text: "1");
-  
+  final _reuService = ReunionService();
+  final _perService = PersonaService();
+  final _visService = VisitanteService();
+
   late DateTime _fecha;
   late List<PersonaModel> _personas;
   late List<VisitanteModel> _visitantes;
@@ -41,12 +46,11 @@ class _AgregarReunionState extends State<AgregarReunion> {
     _visitantes = [];
   }
 
+  //Obtiene lista de personas y visitantes
   void _obtenerCatalogos() async {
-    var service = VisitasService();
-
     try {
-      final personas = await service.getPersonas();
-      final visitantes = await service.getVisitantes();
+      final personas = await _perService.getPersonas();
+      final visitantes = await _visService.getVisitantes();
 
       setState(() {
         _personas = personas;
@@ -101,7 +105,7 @@ class _AgregarReunionState extends State<AgregarReunion> {
           padding: const EdgeInsets.all(8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children:<Widget> [
+            children: <Widget>[
               const Text('Lugar:'),
               CupertinoTextField(
                 controller: _lugarController,
@@ -109,7 +113,6 @@ class _AgregarReunionState extends State<AgregarReunion> {
               ),
               const SizedBox(height: 8),
               const Text('Fecha:'),
-
               const SizedBox(height: 8),
               const Text('Duración en horas:'),
               CupertinoTextField(
@@ -130,11 +133,11 @@ class _AgregarReunionState extends State<AgregarReunion> {
                     return CupertinoPicker(
                       itemExtent: 32,
                       onSelectedItemChanged: (index) {
-                        print('Visitante seleccionado: ${_visitantes[index].nombre}');
+                        print(
+                            'Visitante seleccionado: ${_visitantes[index].nombre}');
                       },
-                      children: snapshot.data!
-                          .map((e) => Text(e.nombre))
-                          .toList(),
+                      children:
+                          snapshot.data!.map((e) => Text(e.nombre)).toList(),
                     );
                   }
                 },
@@ -149,11 +152,8 @@ class _AgregarReunionState extends State<AgregarReunion> {
                   onSelectedItemChanged: (index) {
                     print('Persona seleccionada: ${_personas[index].nombre}');
                   },
-                  children: _personas
-                      .map((e) => Text(e.nombre))
-                      .toList(),
+                  children: _personas.map((e) => Text(e.nombre)).toList(),
                 ),
-
             ],
           ),
         ),

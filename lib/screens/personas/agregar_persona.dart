@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:visitas_app/models/persona_model.dart';
-import 'package:visitas_app/services/visitas_service.dart';
+import 'package:visitas_app/services/persona_service.dart';
 import 'package:visitas_app/utils/alert.dart';
 
 class AgregarPersona extends StatefulWidget {
@@ -33,8 +33,9 @@ class _AgregarPersonaState extends State<AgregarPersona> {
     }
   }
 
+  //Guarda o actualiza una persona
   Future<int> _savePersona(PersonaModel model) async {
-    var service = VisitasService();
+    var service = PersonaService();
     setState(() {
       _isLoading = true;
     });

@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:visitas_app/models/visitante_model.dart';
-import 'package:visitas_app/services/visitas_service.dart';
+import 'package:visitas_app/services/visitante_service.dart';
 import 'package:visitas_app/utils/alert.dart';
 
 class AgregarVisitante extends StatefulWidget {
@@ -33,8 +33,9 @@ class _AgregarVisitanteState extends State<AgregarVisitante> {
     }
   }
 
+  //Guarda o actualiza un visitante
   Future<int> _saveVisitante(VisitanteModel model) async {
-    var service = VisitasService();
+    var service = VisitanteService();
     setState(() {
       _isLoading = true;
     });

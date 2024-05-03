@@ -1,8 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:visitas_app/models/persona_model.dart';
 import 'package:visitas_app/screens/personas/agregar_persona.dart';
-import 'package:visitas_app/services/visitas_service.dart';
+import 'package:visitas_app/services/persona_service.dart';
 import 'package:visitas_app/utils/alert.dart';
+import 'package:visitas_app/utils/custom.dart';
 
 class ListaPersona extends StatefulWidget {
   const ListaPersona({super.key});
@@ -13,6 +14,7 @@ class ListaPersona extends StatefulWidget {
 
 class _ListaPersonaState extends State<ListaPersona> {
   bool _isLoading = true;
+  final _service = PersonaService();
   List<PersonaModel> _personas = [];
 
   @override
@@ -21,11 +23,10 @@ class _ListaPersonaState extends State<ListaPersona> {
     _cargarPersonas();
   }
 
+  //Obtiene listado de personas
   void _cargarPersonas() async {
-    var service = VisitasService();
-
     try {
-      final personas = await service.getPersonas();
+      final personas = await _service.getPersonas();
 
       setState(() {
         _personas = personas;
@@ -36,16 +37,15 @@ class _ListaPersonaState extends State<ListaPersona> {
     }
   }
 
+  //Elimina de la lista la persona seleccionada
   Future<bool> _eliminarPersona(int index) async {
-    var service = VisitasService();
     setState(() {
       _isLoading = true;
     });
 
     try {
-      await service.deletePersona(_personas[index].perId);
+      await _service.deletePersona(_personas[index].perId);
 
-      //Elimina de la lista la persona seleccionada
       setState(() {
         _personas.removeAt(index);
       });
@@ -68,8 +68,10 @@ class _ListaPersonaState extends State<ListaPersona> {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: const Text('Listado de Personas'),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
+        trailing:
+            //Inicio botón de agregar persona
+            CustomNavigationButton(
+          child: const Icon(CupertinoIcons.add),
           onPressed: () {
             Navigator.of(context).push(
               CupertinoPageRoute<void>(
@@ -86,14 +88,14 @@ class _ListaPersonaState extends State<ListaPersona> {
               ),
             );
           },
-          child: const Icon(CupertinoIcons.add),
         ),
+        //Fin botón agregar persona
       ),
       child: SafeArea(
         child: _isLoading
             ? const Center(
                 child:
-                    CupertinoActivityIndicator()) // Centered activity indicator
+                    CupertinoActivityIndicator()) //Indicador de carga de datos
             : Column(
                 children: [
                   Expanded(
@@ -104,16 +106,14 @@ class _ListaPersonaState extends State<ListaPersona> {
 
                         return CupertinoListTile(
                           title: Text(persona.nombre),
-                          subtitle: Text('Área ${persona.area}'),
+                          subtitle: Text('Área: ${persona.area}'),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              //Eliminación de persona
-                              CupertinoButton(
-                                padding: EdgeInsets.zero,
-                                child: const Icon(CupertinoIcons.trash),
+                              //Inicio botón de eliminación de persona
+                              CustomNavigationButton(
+                                child: const Icon(CupertinoIcons.delete),
                                 onPressed: () {
-
                                   //solictud de confirmación para eliminar persona
                                   showActionSheet(context,
                                       title: "¿Desea eliminar esta persona?",
@@ -123,13 +123,12 @@ class _ListaPersonaState extends State<ListaPersona> {
                                       _eliminarPersona(index);
                                     }
                                   });
-
                                 },
                               ),
+                              //Fin botón de eliminación de persona
 
-                              //Actualización de persona
-                              CupertinoButton(
-                                padding: EdgeInsets.zero,
+                              //Inicio botón de edición de persona
+                              CustomNavigationButton(
                                 child: const Icon(
                                     CupertinoIcons.arrow_right_circle),
                                 onPressed: () {
@@ -149,7 +148,8 @@ class _ListaPersonaState extends State<ListaPersona> {
                                     ),
                                   );
                                 },
-                              ),
+                              )
+                              //Fin botón de edición de persona
                             ],
                           ),
                         );
