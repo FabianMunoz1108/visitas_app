@@ -2,9 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:visitas_app/models/persona_model.dart';
 import 'package:visitas_app/screens/personas/agregar_persona.dart';
 import 'package:visitas_app/services/visitas_service.dart';
+import 'package:visitas_app/utils/alert.dart';
 
 class ListaPersona extends StatefulWidget {
-  const ListaPersona({Key? key}) : super(key: key);
+  const ListaPersona({super.key});
 
   @override
   State<ListaPersona> createState() => _ListaPersonaState();
@@ -32,6 +33,33 @@ class _ListaPersonaState extends State<ListaPersona> {
       });
     } catch (e) {
       print('Error al cargar las personas: $e');
+    }
+  }
+
+  Future<bool> _eliminarPersona(int index) async {
+    var service = VisitasService();
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await service.deletePersona(_personas[index].perId);
+
+      //Elimina de la lista la persona seleccionada
+      setState(() {
+        _personas.removeAt(index);
+      });
+      return true;
+    } catch (e) {
+      showAlertDialog(context,
+          title: 'Error', content: 'Ocurrió un error al eliminar la persona');
+
+      print('Error al eliminar la persona: $e  ');
+      return false;
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -77,30 +105,53 @@ class _ListaPersonaState extends State<ListaPersona> {
                         return CupertinoListTile(
                           title: Text(persona.nombre),
                           subtitle: Text('Área ${persona.area}'),
-                          /************************************************/
-                          trailing: CupertinoButton(
-                            padding: EdgeInsets.zero,
-                            child:
-                                const Icon(CupertinoIcons.arrow_right_circle),
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                CupertinoPageRoute<void>(
-                                  builder: (BuildContext context) =>
-                                      AgregarPersona(
-                                    onAgregarItem: (item) {
-                                      setState(() {
-                                        _personas[index] = item;
-                                      });
-                                      Navigator.of(context).pop();
-                                    },
-                                    //Envío de item a widget para edición
-                                    itemToUpdate: _personas[index],
-                                  ),
-                                ),
-                              );
-                            },
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              //Eliminación de persona
+                              CupertinoButton(
+                                padding: EdgeInsets.zero,
+                                child: const Icon(CupertinoIcons.trash),
+                                onPressed: () {
+
+                                  //solictud de confirmación para eliminar persona
+                                  showActionSheet(context,
+                                      title: "¿Desea eliminar esta persona?",
+                                      actions: ['Confirmar'],
+                                      onSelected: (String action) {
+                                    if (action == 'Confirmar') {
+                                      _eliminarPersona(index);
+                                    }
+                                  });
+
+                                },
+                              ),
+
+                              //Actualización de persona
+                              CupertinoButton(
+                                padding: EdgeInsets.zero,
+                                child: const Icon(
+                                    CupertinoIcons.arrow_right_circle),
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    CupertinoPageRoute<void>(
+                                      builder: (BuildContext context) =>
+                                          AgregarPersona(
+                                        onAgregarItem: (item) {
+                                          setState(() {
+                                            _personas[index] = item;
+                                          });
+                                          Navigator.of(context).pop();
+                                        },
+                                        //Envío de item a widget para edición
+                                        itemToUpdate: _personas[index],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
                           ),
-                          /************************************************/
                         );
                       },
                     ),

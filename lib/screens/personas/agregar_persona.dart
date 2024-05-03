@@ -16,7 +16,7 @@ class AgregarPersona extends StatefulWidget {
 }
 
 class _AgregarPersonaState extends State<AgregarPersona> {
-  int _perId = 0;
+  int _personaId = 0;
   bool _isLoading = false;
   final _nombreController = TextEditingController(text: "");
   final _areaController = TextEditingController(text: "");
@@ -27,13 +27,13 @@ class _AgregarPersonaState extends State<AgregarPersona> {
     super.initState();
 
     if (widget.itemToUpdate != null) {
-      _perId = widget.itemToUpdate!.perId;
+      _personaId = widget.itemToUpdate!.perId;
       _nombreController.text = widget.itemToUpdate!.nombre;
       _areaController.text = widget.itemToUpdate!.area;
     }
   }
 
-  Future<int> _savePersona(PersonaModel p) async {
+  Future<int> _savePersona(PersonaModel model) async {
     var service = VisitasService();
     setState(() {
       _isLoading = true;
@@ -41,15 +41,15 @@ class _AgregarPersonaState extends State<AgregarPersona> {
 
     try {
       var id = 0;
-      if (p.perId > 0) {
-        id = await service.putPersona(p);
+      if (model.perId > 0) {
+        id = await service.putPersona(model);
       } else {
-        id = await service.postPersona(p);
+        id = await service.postPersona(model);
       }
       return id;
     } catch (e) {
       showAlertDialog(context,
-          title: 'Error', content: 'Ocurrió un error al agregar la persona');
+          title: 'Error', content: 'Ocurrió un error al guardar la persona');
 
       print('Error al guardar la persona: $e  ');
       return 0;
@@ -72,7 +72,7 @@ class _AgregarPersonaState extends State<AgregarPersona> {
           onPressed: () async {
             // Item to add or update
             var p = PersonaModel(
-              perId: _perId,
+              perId: _personaId,
               nombre: _nombreController.text,
               area: _areaController.text,
             );
@@ -84,7 +84,7 @@ class _AgregarPersonaState extends State<AgregarPersona> {
                 widget.onAgregarItem(p);
               } else {
                 // Update existing item
-                widget.itemToUpdate!.perId = _perId;
+                widget.itemToUpdate!.perId = _personaId;
                 widget.itemToUpdate!.nombre = _nombreController.text;
                 widget.itemToUpdate!.area = _areaController.text;
 
