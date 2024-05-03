@@ -9,13 +9,16 @@ import 'package:visitas_app/models/visitante_model.dart';
 class VisitasService {
   final String _baseUrl = UrlApi.baseUrl;
 
+/******************/
+/*    Usuarios    */
+/******************/
   /// Método que valida las credenciales del usuario
-  Future<bool> login(UsuarioModel credenciales) async {
+  Future<bool> login(UsuarioModel model) async {
     final response = await http.post(Uri.parse('$_baseUrl/usuario'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
-        body: jsonEncode(credenciales.toJson()));
+        body: jsonEncode(model.toJson()));
 
     if (response.statusCode == 200) {
       return true;
@@ -24,6 +27,9 @@ class VisitasService {
     }
   }
 
+/********************/
+/*    Visitantes    */
+/********************/
   /// Método que obtiene el catálogo de visitantes
   Future<List<VisitanteModel>> getVisitantes() async {
     final response = await http.get(Uri.parse('$_baseUrl/visitante'));
@@ -38,6 +44,47 @@ class VisitasService {
     }
   }
 
+    /// Guarda un visitante
+  Future<int> postVisitante(VisitanteModel model) async {
+    final data = model.toJson()
+      ..remove('visId'); // Elimina el id para que no se envíe en el body
+
+    final response = await http.post(Uri.parse('$_baseUrl/visitante'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(data));
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to add visitante');
+    } else {
+      final nuevo = VisitanteModel.fromJson(json.decode(response.body));
+      return nuevo.visId;
+    }
+  }
+
+  /// Actualiza un visitante
+  Future<int> putVisitante(VisitanteModel model) async {
+    final data = model.toJson()
+      ..remove('visId'); // Elimina el id para que no se envíe en el body
+
+    final response =
+        await http.put(Uri.parse('$_baseUrl/visitante/${model.visId}'),
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: jsonEncode(data));
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update visitante');
+    } else {
+      return model.visId;
+    }
+  }
+
+/******************/
+/*    Personas    */
+/******************/
   /// Método que obtiene el catálogo de personas
   Future<List<PersonaModel>> getPersonas() async {
     final response = await http.get(Uri.parse('$_baseUrl/persona'));
@@ -51,8 +98,8 @@ class VisitasService {
   }
 
   /// Guarda una persona
-  Future<int> postPersona(PersonaModel persona) async {
-    final data = persona.toJson()
+  Future<int> postPersona(PersonaModel model) async {
+    final data = model.toJson()
       ..remove('perId'); // Elimina el id para que no se envíe en el body
 
     final response = await http.post(Uri.parse('$_baseUrl/persona'),
@@ -70,12 +117,12 @@ class VisitasService {
   }
 
   /// Actualiza una persona
-  Future<int> putPersona(PersonaModel persona) async {
-    final data = persona.toJson()
+  Future<int> putPersona(PersonaModel model) async {
+    final data = model.toJson()
       ..remove('perId'); // Elimina el id para que no se envíe en el body
 
     final response =
-        await http.put(Uri.parse('$_baseUrl/persona/${persona.perId}'),
+        await http.put(Uri.parse('$_baseUrl/persona/${model.perId}'),
             headers: <String, String>{
               'Content-Type': 'application/json; charset=UTF-8',
             },
@@ -84,10 +131,13 @@ class VisitasService {
     if (response.statusCode != 200) {
       throw Exception('Failed to update persona');
     } else {
-      return persona.perId;
+      return model.perId;
     }
   }
 
+/******************/
+/*    Reuniones    */
+/******************/
   /// Método que obtiene las reuniones
   Future<List<ReunionModel>> getReuniones() async {
     final response = await http.get(Uri.parse('$_baseUrl/reunion'));
