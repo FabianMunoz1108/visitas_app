@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:visitas_app/models/credenciales.dart';
-import 'package:visitas_app/screens/home.dart';
+import 'package:visitas_app/models/usuario_model.dart';
+import 'package:visitas_app/screens/welcome.dart';
 import 'package:visitas_app/services/visitas_service.dart';
 import 'package:visitas_app/utils/alert.dart';
 
@@ -28,6 +26,11 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
     super.initState();
+
+    setState(() {
+      _emailController.text = 'donjulio';
+      _passwordController.text = 'hola1234\$';
+    });
   }
 
   Future<bool> _validarUsuario() async {
@@ -39,7 +42,7 @@ class _LoginState extends State<Login> {
 
     //Validación de credenciales en el servicio
     var service = VisitasService();
-    var credenciales = Credenciales(userName: email, password: password);
+    var credenciales = UsuarioModel(userName: email, password: password);
     final flag = await service.login(credenciales);
 
     if (flag) {
@@ -105,7 +108,7 @@ class _LoginState extends State<Login> {
                       //Redirección a la pantalla de visitas
                       Navigator.pushReplacement(
                         context,
-                        CupertinoPageRoute(builder: (context) => const Home()),
+                        CupertinoPageRoute(builder: (context) => const Welcome()),
                       );
                     } else {
                       showAlertDialog(context,
