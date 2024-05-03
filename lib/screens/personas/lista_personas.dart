@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:visitas_app/models/persona_model.dart';
+import 'package:visitas_app/screens/personas/agregar_persona.dart';
 import 'package:visitas_app/services/visitas_service.dart';
 
 class ListaPersona extends StatefulWidget {
@@ -37,12 +38,34 @@ class _ListaPersonaState extends State<ListaPersona> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('Listado de Personas'),
+      navigationBar: CupertinoNavigationBar(
+        middle: const Text('Listado de Personas'),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () {
+            Navigator.of(context).push(
+              CupertinoPageRoute<void>(
+                builder: (BuildContext context) => AgregarPersona(
+                  onAgregarItem: (item) {
+                    setState(() {
+                      _personas.add(item);
+                    });
+
+                    Navigator.of(context).pop();
+                  },
+                  itemToUpdate: null,
+                ),
+              ),
+            );
+          },
+          child: const Icon(CupertinoIcons.add),
+        ),
       ),
       child: SafeArea(
         child: _isLoading
-            ? const Center(child: CupertinoActivityIndicator()) // Centered activity indicator
+            ? const Center(
+                child:
+                    CupertinoActivityIndicator()) // Centered activity indicator
             : Column(
                 children: [
                   Expanded(
@@ -54,6 +77,30 @@ class _ListaPersonaState extends State<ListaPersona> {
                         return CupertinoListTile(
                           title: Text(persona.nombre),
                           subtitle: Text('Área ${persona.area}'),
+                          /************************************************/
+                          trailing: CupertinoButton(
+                            padding: EdgeInsets.zero,
+                            child:
+                                const Icon(CupertinoIcons.arrow_right_circle),
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                CupertinoPageRoute<void>(
+                                  builder: (BuildContext context) =>
+                                      AgregarPersona(
+                                    onAgregarItem: (item) {
+                                      setState(() {
+                                        _personas[index] = item;
+                                      });
+                                      Navigator.of(context).pop();
+                                    },
+                                    //Envío de item a widget para edición
+                                    itemToUpdate: _personas[index],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          /************************************************/
                         );
                       },
                     ),

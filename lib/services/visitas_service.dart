@@ -50,6 +50,44 @@ class VisitasService {
     }
   }
 
+  /// Guarda una persona
+  Future<int> postPersona(PersonaModel persona) async {
+    final data = persona.toJson()
+      ..remove('perId'); // Elimina el id para que no se envíe en el body
+
+    final response = await http.post(Uri.parse('$_baseUrl/persona'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(data));
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to add persona');
+    } else {
+      final nuevo = PersonaModel.fromJson(json.decode(response.body));
+      return nuevo.perId;
+    }
+  }
+
+  /// Actualiza una persona
+  Future<int> putPersona(PersonaModel persona) async {
+    final data = persona.toJson()
+      ..remove('perId'); // Elimina el id para que no se envíe en el body
+
+    final response =
+        await http.put(Uri.parse('$_baseUrl/persona/${persona.perId}'),
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: jsonEncode(data));
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update persona');
+    } else {
+      return persona.perId;
+    }
+  }
+
   /// Método que obtiene las reuniones
   Future<List<ReunionModel>> getReuniones() async {
     final response = await http.get(Uri.parse('$_baseUrl/reunion'));
