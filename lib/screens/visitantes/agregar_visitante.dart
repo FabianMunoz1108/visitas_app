@@ -61,6 +61,21 @@ class _AgregarVisitanteState extends State<AgregarVisitante> {
     }
   }
 
+  // Función para validar los campos
+  bool _validateFields() {
+    if (_nombreController.text.isEmpty) {
+      showAlertDialog(context,
+          title: 'Info', content: 'El campo nombre es obligatorio');
+      return false;
+    }
+    if (_origenController.text.isEmpty) {
+      showAlertDialog(context,
+          title: 'Info', content: 'El campo origen es obligatorio');
+      return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
@@ -71,28 +86,32 @@ class _AgregarVisitanteState extends State<AgregarVisitante> {
         trailing: CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: () async {
-            // Item to add or update
-            var v = VisitanteModel(
-              visId: _visitanteId,
-              nombre: _nombreController.text,
-              origen: _origenController.text,
-            );
-            var id = await _saveVisitante(v);
+// Inicio validación de campos
+            if (_validateFields()) {
+              // Item to add or update
+              var v = VisitanteModel(
+                visId: _visitanteId,
+                nombre: _nombreController.text,
+                origen: _origenController.text,
+              );
+              var id = await _saveVisitante(v);
 
-            if (id > 0) {
-              //Se verifica si el item ya existe para no remplazarlo con uno nuevo
-              if (widget.itemToUpdate == null) {
-                v.visId = id;
-                widget.onAgregarItem(v);
-              } else {
-                // Update existing item
-                widget.itemToUpdate!.visId = _visitanteId;
-                widget.itemToUpdate!.nombre = _nombreController.text;
-                widget.itemToUpdate!.origen = _origenController.text;
+              if (id > 0) {
+                //Se verifica si el item ya existe para no remplazarlo con uno nuevo
+                if (widget.itemToUpdate == null) {
+                  v.visId = id;
+                  widget.onAgregarItem(v);
+                } else {
+                  // Update existing item
+                  widget.itemToUpdate!.visId = _visitanteId;
+                  widget.itemToUpdate!.nombre = _nombreController.text;
+                  widget.itemToUpdate!.origen = _origenController.text;
 
-                widget.onAgregarItem(widget.itemToUpdate!);
+                  widget.onAgregarItem(widget.itemToUpdate!);
+                }
               }
             }
+// Fin validación de campos
           },
           child: Icon(widget.itemToUpdate == null
               ? CupertinoIcons.add_circled

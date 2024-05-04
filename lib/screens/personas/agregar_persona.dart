@@ -61,6 +61,21 @@ class _AgregarPersonaState extends State<AgregarPersona> {
     }
   }
 
+  // Función para validar los campos
+  bool _validateFields() {
+    if (_nombreController.text.isEmpty) {
+      showAlertDialog(context,
+          title: 'Info', content: 'El campo nombre es obligatorio');
+      return false;
+    }
+    if (_areaController.text.isEmpty) {
+      showAlertDialog(context,
+          title: 'Info', content: 'El campo área es obligatorio');
+      return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
@@ -69,32 +84,36 @@ class _AgregarPersonaState extends State<AgregarPersona> {
             ? 'Agregar Persona'
             : 'Actualizar Persona'),
         trailing:
-          //Inicio boton de guardar
-          CupertinoButton(
+            //Inicio boton de guardar
+            CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: () async {
-            // Elemento a guardar o actualizar
-            var p = PersonaModel(
-              perId: _personaId,
-              nombre: _nombreController.text,
-              area: _areaController.text,
-            );
-            var id = await _savePersona(p);
+//Inicio validación de campos
+            if (_validateFields()) {
+              // Elemento a guardar o actualizar
+              var p = PersonaModel(
+                perId: _personaId,
+                nombre: _nombreController.text,
+                area: _areaController.text,
+              );
+              var id = await _savePersona(p);
 
-            if (id > 0) {
-              //Se verifica si el item ya existe para no remplazarlo con uno nuevo
-              if (widget.itemToUpdate == null) {
-                p.perId = id;
-                widget.onAgregarItem(p);
-              } else {
-                // Actualiza el item en la lista sin remplazarlo
-                widget.itemToUpdate!.perId = _personaId;
-                widget.itemToUpdate!.nombre = _nombreController.text;
-                widget.itemToUpdate!.area = _areaController.text;
+              if (id > 0) {
+                //Se verifica si el item ya existe para no remplazarlo con uno nuevo
+                if (widget.itemToUpdate == null) {
+                  p.perId = id;
+                  widget.onAgregarItem(p);
+                } else {
+                  // Actualiza el item en la lista sin remplazarlo
+                  widget.itemToUpdate!.perId = _personaId;
+                  widget.itemToUpdate!.nombre = _nombreController.text;
+                  widget.itemToUpdate!.area = _areaController.text;
 
-                widget.onAgregarItem(widget.itemToUpdate!);
+                  widget.onAgregarItem(widget.itemToUpdate!);
+                }
               }
             }
+//Fin validación de campos
           },
           child: Icon(widget.itemToUpdate == null
               ? CupertinoIcons.add_circled

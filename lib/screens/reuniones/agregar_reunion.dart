@@ -63,6 +63,14 @@ class _AgregarReunionState extends State<AgregarReunion> {
       final visitantes = await _visService.getVisitantes();
 
       setState(() {
+        // Agregamos una persona y un visitante por defecto
+        personas.insert(0,
+            PersonaModel(perId: 0, nombre: 'Seleccione una persona', area: ''));
+        visitantes.insert(
+            0,
+            VisitanteModel(
+                visId: 0, nombre: 'Seleccione un visitante', origen: ''));
+
         _personas = personas;
         _visitantes = visitantes;
         _isLoading = false;
@@ -99,6 +107,26 @@ class _AgregarReunionState extends State<AgregarReunion> {
     }
   }
 
+  // Función para validar los campos
+  bool _validateFields() {
+    if (_lugarController.text.isEmpty) {
+      showAlertDialog(context,
+          title: 'Info', content: 'El campo lugar es obligatorio');
+      return false;
+    }
+    if (_visitanteSeleccionado == 0) {
+      showAlertDialog(context,
+          title: 'Info', content: 'Seleccione un visitante');
+      return false;
+    }
+    if (_personaSeleccionada == 0) {
+      showAlertDialog(context,
+          title: 'Info', content: 'Seleccione una persona');
+      return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
@@ -111,34 +139,38 @@ class _AgregarReunionState extends State<AgregarReunion> {
             CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: () async {
-            // Elemento a guardar o actualizar
-            var r = ReunionModel(
-              reuId: _reunionId,
-              lugar: _lugarController.text,
-              duracion: _duracion.toInt(),
-              horario: _fecha.toIso8601String(),
-              perId: _personaSeleccionada,
-              visId: _visitanteSeleccionado,
-            );
-            var id = await _saveReunion(r);
+// Inicio validación de campos
+            if (_validateFields()) {
+              // Elemento a guardar o actualizar
+              var r = ReunionModel(
+                reuId: _reunionId,
+                lugar: _lugarController.text,
+                duracion: _duracion.toInt(),
+                horario: _fecha.toIso8601String(),
+                perId: _personaSeleccionada,
+                visId: _visitanteSeleccionado,
+              );
+              var id = await _saveReunion(r);
 
-            if (id > 0) {
-              //Se verifica si el item ya existe para no remplazarlo con uno nuevo
-              if (widget.itemToUpdate == null) {
-                r.reuId = id;
-                widget.onAgregarItem(r);
-              } else {
-                // Actualiza el item en la lista sin remplazarlo
-                widget.itemToUpdate!.reuId = _reunionId;
-                widget.itemToUpdate!.lugar = _lugarController.text;
-                widget.itemToUpdate!.duracion = _duracion.toInt();
-                widget.itemToUpdate!.horario = _fecha.toIso8601String();
-                widget.itemToUpdate!.perId = _personaSeleccionada;
-                widget.itemToUpdate!.visId = _visitanteSeleccionado;
+              if (id > 0) {
+                //Se verifica si el item ya existe para no remplazarlo con uno nuevo
+                if (widget.itemToUpdate == null) {
+                  r.reuId = id;
+                  widget.onAgregarItem(r);
+                } else {
+                  // Actualiza el item en la lista sin remplazarlo
+                  widget.itemToUpdate!.reuId = _reunionId;
+                  widget.itemToUpdate!.lugar = _lugarController.text;
+                  widget.itemToUpdate!.duracion = _duracion.toInt();
+                  widget.itemToUpdate!.horario = _fecha.toIso8601String();
+                  widget.itemToUpdate!.perId = _personaSeleccionada;
+                  widget.itemToUpdate!.visId = _visitanteSeleccionado;
 
-                widget.onAgregarItem(widget.itemToUpdate!);
+                  widget.onAgregarItem(widget.itemToUpdate!);
+                }
               }
             }
+// Fin validación de campos
           },
           child: Icon(widget.itemToUpdate == null
               ? CupertinoIcons.add_circled
