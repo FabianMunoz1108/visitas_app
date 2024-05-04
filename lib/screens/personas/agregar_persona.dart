@@ -84,6 +84,7 @@ class _AgregarPersonaState extends State<AgregarPersona> {
             if (id > 0) {
               //Se verifica si el item ya existe para no remplazarlo con uno nuevo
               if (widget.itemToUpdate == null) {
+                p.perId = id;
                 widget.onAgregarItem(p);
               } else {
                 // Actualiza el item en la lista sin remplazarlo

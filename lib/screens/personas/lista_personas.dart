@@ -16,6 +16,9 @@ class _ListaPersonaState extends State<ListaPersona> {
   bool _isLoading = true;
   final _service = PersonaService();
   List<PersonaModel> _personas = [];
+  List<PersonaModel> _filteredPersonas = [];
+  Map<int, int> _indexMap =
+      {}; // Mapea el índice original a los índices filtrados
 
   @override
   void initState() {
@@ -30,7 +33,12 @@ class _ListaPersonaState extends State<ListaPersona> {
 
       setState(() {
         _personas = personas;
+        _filteredPersonas = List.from(personas); // Inicializa la lista filtrada
         _isLoading = false;
+        _indexMap = {
+          for (var index in List.generate(_personas.length, (index) => index))
+            index: index
+        }; // Initialize index mapping
       });
     } catch (e) {
       print('Error al cargar las personas: $e');
@@ -48,6 +56,9 @@ class _ListaPersonaState extends State<ListaPersona> {
 
       setState(() {
         _personas.removeAt(index);
+        _filteredPersonas
+            .removeAt(_indexMap[index]!); // Elimina de la lista filtrada
+        _indexMap.remove(index); // Elimina del mapeo de índices
       });
       return true;
     } catch (e) {
@@ -63,13 +74,30 @@ class _ListaPersonaState extends State<ListaPersona> {
     }
   }
 
+  // Filtra las lista de personas basado en el texto de búsqueda
+  void _filterPersonas(String query) {
+    setState(() {
+      _filteredPersonas = _personas
+          .where((persona) =>
+              persona.nombre.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+
+      // Actualiza el mapeo de índices
+      _indexMap = {
+        for (var index
+            in List.generate(_filteredPersonas.length, (index) => index))
+          index: _personas.indexOf(_filteredPersonas[index])
+      };
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: const Text('Listado de Personas'),
         trailing:
-            //Inicio botón de agregar persona
+            // Inicio botón agregar persona
             CustomNavigationButton(
           child: const Icon(CupertinoIcons.add),
           onPressed: () {
@@ -79,6 +107,11 @@ class _ListaPersonaState extends State<ListaPersona> {
                   onAgregarItem: (item) {
                     setState(() {
                       _personas.add(item);
+                      // Agraga a la lista de personas
+                      _filteredPersonas.add(item);
+                      // Actualiza el mapa de índices
+                      _indexMap[_personas.length - 1] =
+                          _filteredPersonas.length - 1;
                     });
 
                     Navigator.of(context).pop();
@@ -89,7 +122,7 @@ class _ListaPersonaState extends State<ListaPersona> {
             );
           },
         ),
-        //Fin botón agregar persona
+        // Fin botón agregar persona
       ),
       child: SafeArea(
         child: _isLoading
@@ -98,11 +131,16 @@ class _ListaPersonaState extends State<ListaPersona> {
                     CupertinoActivityIndicator()) //Indicador de carga de datos
             : Column(
                 children: [
+                  // Inicio widget de búsqueda
+                  CustomSearchTextField(
+                      onChanged: _filterPersonas,
+                      placeholder: 'Buscar persona'),
+                  // Fin widget de búsqueda
                   Expanded(
                     child: ListView.builder(
-                      itemCount: _personas.length,
+                      itemCount: _filteredPersonas.length,
                       itemBuilder: (context, index) {
-                        final persona = _personas[index];
+                        final persona = _filteredPersonas[index];
 
                         return CupertinoListTile(
                           title: Text(persona.nombre),
@@ -110,24 +148,24 @@ class _ListaPersonaState extends State<ListaPersona> {
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              //Inicio botón de eliminación de persona
+                              // Inicio botón eliminar persona
                               CustomNavigationButton(
                                 child: const Icon(CupertinoIcons.delete),
                                 onPressed: () {
-                                  //solictud de confirmación para eliminar persona
                                   showActionSheet(context,
                                       title: "¿Desea eliminar esta persona?",
                                       actions: ['Confirmar'],
                                       onSelected: (String action) {
                                     if (action == 'Confirmar') {
-                                      _eliminarPersona(index);
+                                      _eliminarPersona(_indexMap[
+                                          index]!);
                                     }
                                   });
                                 },
                               ),
-                              //Fin botón de eliminación de persona
-
-                              //Inicio botón de edición de persona
+                              // Fin botón eliminar persona
+                              
+                              // Inicio botón editar persona
                               CustomNavigationButton(
                                 child: const Icon(
                                     CupertinoIcons.arrow_right_circle),
@@ -138,18 +176,21 @@ class _ListaPersonaState extends State<ListaPersona> {
                                           AgregarPersona(
                                         onAgregarItem: (item) {
                                           setState(() {
-                                            _personas[index] = item;
+                                            _personas[_indexMap[index]!] =
+                                                item;
+                                            _filteredPersonas[index] = item;
                                           });
                                           Navigator.of(context).pop();
                                         },
-                                        //Envío de item a widget para edición
-                                        itemToUpdate: _personas[index],
+                                        // Envío de item a widget para edición
+                                        itemToUpdate: _personas[_indexMap[
+                                            index]!],
                                       ),
                                     ),
                                   );
                                 },
                               )
-                              //Fin botón de edición de persona
+                              // Fin botón editar persona
                             ],
                           ),
                         );

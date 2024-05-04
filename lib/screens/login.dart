@@ -54,14 +54,14 @@ class _LoginState extends State<Login> {
       return false;
     }
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('Acceso a visitas'),
-      ),
-      child: SafeArea(
+@override
+Widget build(BuildContext context) {
+  return CupertinoPageScaffold(
+    navigationBar: const CupertinoNavigationBar(
+      middle: Text('Acceso a visitas'),
+    ),
+    child: SafeArea(
+      child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -70,11 +70,12 @@ class _LoginState extends State<Login> {
               Row(
                 children: [
                   Expanded(
-                      child: Column(
-                    children: [
-                      Image.asset('assets/200-NEGRO.png'),
-                    ],
-                  )),
+                    child: Column(
+                      children: [
+                        Image.asset('assets/200-NEGRO.png'),
+                      ],
+                    ),
+                  ),
                 ],
               ),
               //Fin Logo
@@ -139,6 +140,8 @@ class _LoginState extends State<Login> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 }

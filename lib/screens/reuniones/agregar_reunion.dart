@@ -125,6 +125,7 @@ class _AgregarReunionState extends State<AgregarReunion> {
             if (id > 0) {
               //Se verifica si el item ya existe para no remplazarlo con uno nuevo
               if (widget.itemToUpdate == null) {
+                r.reuId = id;
                 widget.onAgregarItem(r);
               } else {
                 // Actualiza el item en la lista sin remplazarlo

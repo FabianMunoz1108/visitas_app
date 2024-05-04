@@ -16,6 +16,9 @@ class _ListaReunionState extends State<ListaReunion> {
   bool _isLoading = true;
   final _service = ReunionService();
   List<ReunionModel> _reuniones = [];
+  List<ReunionModel> _filteredReuniones = [];
+  Map<int, int> _indexMap =
+      {}; // Mapea el índice original a los índices filtrados
 
   @override
   void initState() {
@@ -30,7 +33,14 @@ class _ListaReunionState extends State<ListaReunion> {
 
       setState(() {
         _reuniones = reuniones;
+        _filteredReuniones =
+            List.from(reuniones); // Inicializa la lista filtrada
         _isLoading = false;
+
+        _indexMap = {
+          for (var index in List.generate(_reuniones.length, (index) => index))
+            index: index
+        }; // Inicializa el mapeo de índices
       });
     } catch (e) {
       print('Error al cargar las reuniones: $e');
@@ -39,7 +49,6 @@ class _ListaReunionState extends State<ListaReunion> {
 
   //Elimina de la lista la reunión seleccionada
   Future<bool> _eliminarReunion(int index) async {
-
     setState(() {
       _isLoading = true;
     });
@@ -49,6 +58,9 @@ class _ListaReunionState extends State<ListaReunion> {
 
       setState(() {
         _reuniones.removeAt(index);
+        _filteredReuniones
+            .removeAt(_indexMap[index]!); // Elimina de la lista filtrada
+        _indexMap.remove(index); // Elimina del mapeo de índices
       });
       return true;
     } catch (e) {
@@ -62,6 +74,23 @@ class _ListaReunionState extends State<ListaReunion> {
         _isLoading = false;
       });
     }
+  }
+
+  // Filtra la lista de reuniones basado en el texto de búsqueda
+  void _filtrarReuniones(String query) {
+    setState(() {
+      _filteredReuniones = _reuniones
+          .where((reunion) =>
+              reunion.lugar.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+
+      // Actualiza el mapeo de índices
+      _indexMap = {
+        for (var index
+            in List.generate(_filteredReuniones.length, (index) => index))
+          index: _reuniones.indexOf(_filteredReuniones[index])
+      };
+    });
   }
 
   @override
@@ -80,6 +109,12 @@ class _ListaReunionState extends State<ListaReunion> {
                   onAgregarItem: (item) {
                     setState(() {
                       _reuniones.add(item);
+
+                      // Agrega a la lista filtrada
+                      _filteredReuniones.add(item);
+                      // Actualiza el mapeo de índices
+                      _indexMap[_reuniones.length - 1] =
+                          _filteredReuniones.length - 1;
                     });
 
                     Navigator.of(context).pop();
@@ -96,14 +131,19 @@ class _ListaReunionState extends State<ListaReunion> {
           child: _isLoading
               ? const Center(
                   child:
-                      CupertinoActivityIndicator()) // Centered activity indicator
+                      CupertinoActivityIndicator()) // Indicador de carga de datos
               : Column(
                   children: [
+                    //Inicio widget de búsqueda
+                    CustomSearchTextField(
+                        onChanged: _filtrarReuniones,
+                        placeholder: 'Buscar reunión'),
+                    //Fin widget de búsqueda
                     Expanded(
                       child: ListView.builder(
-                        itemCount: _reuniones.length,
+                        itemCount: _filteredReuniones.length,
                         itemBuilder: (context, index) {
-                          final reunion = _reuniones[index];
+                          final reunion = _filteredReuniones[index];
 
                           //parsear la fecha
                           final fecha = DateTime.parse(reunion.horario);
@@ -114,7 +154,8 @@ class _ListaReunionState extends State<ListaReunion> {
 
                           return CupertinoListTile(
                               title: Text(reunion.lugar),
-                              subtitle: Text('Fecha: $fechaFormateada, Duración: ${reunion.duracion} hr(s)'),
+                              subtitle: Text(
+                                  'Fecha: $fechaFormateada, Duración: ${reunion.duracion} hr(s)'),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -129,7 +170,7 @@ class _ListaReunionState extends State<ListaReunion> {
                                           actions: ['Confirmar'],
                                           onSelected: (String action) {
                                         if (action == 'Confirmar') {
-                                          _eliminarReunion(index);
+                                          _eliminarReunion(_indexMap[index]!);
                                         }
                                       });
                                     },
@@ -137,8 +178,7 @@ class _ListaReunionState extends State<ListaReunion> {
                                   //Fin botón de eliminación de reunión
 
                                   //Inicio botón de edición de reunión
-                                  CupertinoButton(
-                                    padding: EdgeInsets.zero,
+                                  CustomNavigationButton(
                                     child: const Icon(
                                         CupertinoIcons.arrow_right_circle),
                                     onPressed: () {
@@ -148,12 +188,16 @@ class _ListaReunionState extends State<ListaReunion> {
                                               AgregarReunion(
                                             onAgregarItem: (item) {
                                               setState(() {
-                                                _reuniones[index] = item;
+                                                _reuniones[_indexMap[index]!] =
+                                                    item;
+                                                _filteredReuniones[index] =
+                                                    item;
                                               });
                                               Navigator.of(context).pop();
                                             },
                                             //Envío de item a widget para edición
-                                            itemToUpdate: _reuniones[index],
+                                            itemToUpdate:
+                                                _reuniones[_indexMap[index]!],
                                           ),
                                         ),
                                       );

@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
-// Muestra un dialogo de alerta
+// Esta función muestra un CupertinoAlertDialog con un título y un contenido, para notificar al usuario sobre un evento.
 void showAlertDialog(
   BuildContext context, {
   required String title,
@@ -24,7 +24,7 @@ void showAlertDialog(
     },
   );
 }
-// Muestra modal de confirmación
+// Esta función muestra un CupertinoActionSheet con una lista de acciones, para solicitar al usuario que seleccione una de ellas.
 void showActionSheet(
   BuildContext context, {
   required String title,
@@ -59,8 +59,7 @@ void showActionSheet(
   );
 }
 
-  // This function displays a CupertinoModalPopup with a reasonable fixed height
-  // which hosts CupertinoDatePicker.
+  // Esta función muestra un CupertinoModalPopup con una altura fija razonable
   void showDateDialog(
     BuildContext context,
     Widget child) {
@@ -69,14 +68,13 @@ void showActionSheet(
       builder: (BuildContext context) => Container(
         height: 216,
         padding: const EdgeInsets.only(top: 6.0),
-        // The Bottom margin is provided to align the popup above the system
-        // navigation bar.
+        // El margen inferior se proporciona para alinear el popup sobre la barra de navegación del sistema.
         margin: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        // Provide a background color for the popup.
+        // Proporciona un color de fondo para el popup.
         color: CupertinoColors.systemBackground.resolveFrom(context),
-        // Use a SafeArea widget to avoid system overlaps.
+        //Uso de un widget SafeArea para evitar superposiciones del sistema.
         child: SafeArea(
           top: false,
           child: child,

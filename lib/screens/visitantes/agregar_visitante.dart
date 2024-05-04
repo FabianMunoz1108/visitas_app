@@ -82,6 +82,7 @@ class _AgregarVisitanteState extends State<AgregarVisitante> {
             if (id > 0) {
               //Se verifica si el item ya existe para no remplazarlo con uno nuevo
               if (widget.itemToUpdate == null) {
+                v.visId = id;
                 widget.onAgregarItem(v);
               } else {
                 // Update existing item
